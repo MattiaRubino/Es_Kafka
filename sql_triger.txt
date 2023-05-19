@@ -1,0 +1,17 @@
+create or replace function trigger_doc()
+returns trigger as $documents_audit$
+ BEGIN
+        IF (TG_OP = 'DELETE') THEN
+            INSERT INTO log_change SELECT old.id_document ,'DELETE',current_timestamp;
+        ELSIF (TG_OP = 'UPDATE') THEN
+            INSERT INTO log_change SELECT new.id_document,'UPDATE', current_timestamp;
+        ELSIF (TG_OP = 'INSERT') THEN
+            INSERT INTO log_change SELECT new.id_document,'INSERT', current_timestamp;
+        END IF;
+        RETURN NULL;
+    END;
+$documents_audit$ LANGUAGE plpgsql;
+
+CREATE TRIGGER documents_audit
+AFTER INSERT OR UPDATE OR DELETE ON documents
+    FOR EACH ROW EXECUTE FUNCTION trigger_doc();
